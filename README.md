@@ -6,7 +6,13 @@
 [![Linting: flake8](https://img.shields.io/badge/linting-flake8-blue)](https://flake8.pycqa.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A physics-based simulation of water draining from a frustum-shaped bucket under ideal conditions, using **Torricelli's law** and numerical integration methods.
+A physics-based simulation of fluid draining from a frustum-shaped bucket with **realistic effects** including discharge coefficient and viscosity, using **Torricelli's law** and numerical integration methods.
+
+### 🆕 Features
+- **Discharge Coefficient (Cd)**: Accounts for real-world flow reduction (vena contracta, edge effects)
+- **Fluid Viscosity**: Supports multiple fluid types (water, petrol, oil, treacle, honey, milk)
+- **Reynolds Number Correction**: Adjusts flow based on laminar/turbulent conditions
+- **Side-by-Side Comparison**: Visual comparison of ideal vs. realistic drainage
 
 ## 📋 Table of Contents
 
@@ -108,7 +114,49 @@ And the cross-sectional area is:
 A(h) = π × r(h)²
 ```
 
-#### 5. Numerical Integration
+#### 5. Realistic Flow Corrections
+
+##### Discharge Coefficient (Cd)
+Real orifices don't achieve ideal flow due to:
+- **Vena contracta**: Flow stream contracts after leaving the orifice
+- **Edge effects**: Sharp edges create turbulence and energy losses
+- **Viscous losses**: Fluid friction reduces flow rate
+
+Typical Cd values:
+```
+Cd = 1.0   → Ideal flow (theoretical only)
+Cd = 0.8   → Smooth, rounded orifice
+Cd = 0.65  → Typical sharp-edged orifice
+Cd = 0.6   → Sharp edge with significant contraction
+```
+
+The corrected velocity becomes:
+```
+v = Cd × √(2gh)
+```
+
+##### Viscosity Correction
+Flow behavior depends on the **Reynolds number** (Re):
+
+```
+Re = v × d / ν
+```
+
+where `ν` is kinematic viscosity (m²/s).
+
+Flow regimes:
+- **Laminar (Re < 2300)**: Smooth, ordered flow with significant viscous effects
+- **Transitional (2300 < Re < 4000)**: Mixed regime
+- **Turbulent (Re > 4000)**: Chaotic flow with reduced viscous effects
+
+Viscosity correction factors:
+```
+Re < 2300:  factor = 0.70  (70% of ideal)
+Re < 4000:  factor = 0.85  (85% of ideal)
+Re > 4000:  factor ≈ 1.0   (minimal viscosity effect)
+```
+
+#### 6. Numerical Integration
 
 We solve the differential equation using **Euler's method**:
 
@@ -120,19 +168,31 @@ This is repeated for each time step `Δt` until the bucket is empty.
 
 ## ✨ Features
 
+### Physics & Realism
 - **Accurate Physics Simulation**: Uses Torricelli's law and proper fluid dynamics
+- **Discharge Coefficient**: Adjustable Cd parameter (0.5-1.0) for realistic flow
+- **Multiple Fluids**: Choose from water, petrol, milk, motor oil, olive oil, treacle, or honey
+- **Viscosity Effects**: Automatic Reynolds number calculation and flow corrections
+- **Laminar/Turbulent Flow**: Adapts to flow regime based on conditions
+
+### Simulation Features
 - **Numerical Integration**: Employs Euler's method with configurable time steps
-- **Interactive Input**: Prompts for all necessary parameters
+- **Interactive Input**: Prompts for all necessary parameters with fluid selection
 - **Validation**: Ensures physically meaningful inputs
-- **Visualization**: Generates a matplotlib graph showing water level vs. time
-- **Detailed Output**: Displays calculated parameters and final drainage time
+- **Comparison Mode**: Side-by-side plots of ideal vs. realistic drainage
+- **Visualization**: Professional matplotlib graphs with parameter annotations
+- **Detailed Output**: Displays calculated parameters, Reynolds numbers, and drainage times
+
+### Code Quality
 - **Professional Code**: Formatted with `black`, linted with `flake8`
+- **Type Hints**: Full type annotations for better code clarity
+- **Comprehensive Documentation**: Detailed docstrings and README
 
 ## 📦 Installation
 
 ### Prerequisites
 
-- Python 3.13 or higher
+- Python 3.9 or higher
 - Poetry (for dependency management)
 
 ### Install Poetry
@@ -194,7 +254,10 @@ The program will prompt you for the following parameters:
 2. **Lower radius (r2)** in meters - the radius at the bottom of the bucket
 3. **Total volume (L)** in liters - the capacity of the bucket
 4. **Outlet diameter (d)** in meters - the diameter of the drainage hole
-5. **Time step (t)** in seconds - the simulation time step for numerical integration
+5. **Fluid type** - select from water, petrol, milk, motor oil, olive oil, treacle, or honey
+6. **Discharge coefficient (Cd)** - real-world flow correction (0.5-1.0)
+7. **Simulation mode** - realistic only or side-by-side comparison with ideal
+8. **Time step (t)** in seconds - the simulation time step for numerical integration
 
 ### Input Validation
 
@@ -211,22 +274,89 @@ The program includes validation to ensure:
 | Lower radius | r2 | meters | Radius at the bottom base | 0.05 - 0.5 m |
 | Volume | L | liters | Total bucket capacity | 1 - 100 L |
 | Outlet diameter | d | meters | Diameter of drainage hole | 0.001 - 0.05 m |
+| Discharge coeff | Cd | dimensionless | Flow reduction factor | 0.5 - 1.0 |
+| Fluid type | - | - | Fluid being drained | See list below |
 | Time step | t | seconds | Simulation time increment | 0.01 - 0.1 s |
 
-### Example Values
+### Available Fluids
 
-For a typical bucket:
+| Fluid | Density (kg/m³) | Dynamic Viscosity (Pa·s) | Typical Use |
+|-------|-----------------|--------------------------|-------------|
+| Water | 1000 | 0.001 | General purpose |
+| Petrol | 750 | 0.0006 | Low viscosity reference |
+| Milk | 1030 | 0.002 | Similar to water |
+| Motor Oil | 870 | 0.29 | High viscosity |
+| Olive Oil | 910 | 0.081 | Medium viscosity |
+| Treacle | 1420 | 5.0 | Very high viscosity |
+| Honey | 1420 | 10.0 | Extremely high viscosity |
+### Comparison Mode (Ideal vs. Realistic)
+
 ```
-r1 = 0.15 m      (15 cm top radius)
-r2 = 0.10 m      (10 cm bottom radius)
-L  = 10 liters   (10 L capacity)
-d  = 0.01 m      (1 cm outlet diameter)
-t  = 0.05 s      (50 ms time step)
+======================================================================
+FRUSTUM BUCKET DRAINAGE SIMULATOR (Real-World Effects)
+======================================================================
+
+This program simulates fluid draining from a frustum-shaped bucket
+with realistic effects: discharge coefficient and viscosity.
+
+Please enter the following parameters:
+
+Upper radius r1 (meters): 0.15
+Lower radius r2 (meters): 0.10
+Total volume L (liters): 10
+Outlet diameter d (meters): 0.01
+
+Available fluids:
+  1. Water                 (viscosity: 1.00 mPa·s)
+  2. Petrol (Gasoline)     (viscosity: 0.60 mPa·s)
+  3. Milk                  (viscosity: 2.00 mPa·s)
+  4. Motor Oil (SAE 30)    (viscosity: 290.0 mPa·s)
+  5. Olive Oil             (viscosity: 81.0 mPa·s)
+  6. Treacle (Golden Syrup)(viscosity: 5.0 mPa·s)
+  7. Honey                 (viscosity: 10.0 mPa·s)
+
+Select fluid (1-7): 1
+
+Discharge coefficient (Cd):
+  • 1.0  = Ideal flow (theoretical)
+  • 0.8  = Smooth, rounded orifice
+  • 0.65 = Typical sharp-edged orifice
+  • 0.6  = Sharp-edged with vena contracta
+Enter discharge coefficient (0.5-1.0): 0.65
+
+Simulation mode:
+  1. Realistic only
+  2. Side-by-side comparison (Ideal vs Realistic)
+Select mode (1 or 2, default 2): 2
+
+Time step t (seconds): 0.05
+
+======================================================================
+Starting simulation...
+======================================================================
+
+Bucket configuration:
+  Calculated height: 0.3395 m
+  Outlet area: 0.000079 m²
+  Fluid: Water
+  Discharge coefficient: 0.65
+  Time step: 0.05 seconds
+
+Running ideal simulation...
+Running realistic simulation...
+
+======================================================================
+RESULTS:
+======================================================================
+Ideal drainage time:     245.67 seconds
+Realistic drainage time: 377.95 seconds
+Time increase:           +132.28 seconds (53.9%)
+======================================================================
+
+Generating comparison plot...
 ```
 
-## 📈 Example Output
-
-```
+The program displays a side-by-side plot showing both ideal and realistic drainage curves, with parameter information below.
 ============================================================
 FRUSTUM BUCKET WATER DRAINAGE SIMULATOR
 ============================================================
@@ -364,25 +494,19 @@ t  = 0.05 s
 
 This simulation makes the following ideal assumptions:
 
-1. **Inviscid flow**: No viscosity effects (no friction within the fluid)
-2. **No air resistance**: Air drag is negligible
-3. **Sharp-edged orifice**: The outlet is a perfect circular hole
-4. **Constant discharge coefficient**: C_d = 1.0 (ideal flow)
-5. **Steady flow**: No turbulence or vortex formation
-6. **Rigid container**: The bucket doesn't deform
-7. **Constant gravity**: g = 9.81 m/s²
+1. **No air resistance**: Air drag is negligible
+2. **Sharp-edged orifice**: The outlet is a perfect circular hole
+3. **Steady flow**: No turbulence or vortex formation
+4. **Rigid container**: The bucket doesn't deform
+5. **Constant gravity**: g = 9.81 m/s²
 
 In reality:
-- Real drainage may be slightly slower due to viscosity
-- Discharge coefficient is typically 0.6-0.8 for real orifices
 - Surface tension and vortex effects may play a role
 
 ## 🤝 Contributing
 
 Contributions are welcome! Areas for improvement:
 
-- Add discharge coefficient parameter for more realistic simulation
-- Implement multiple outlet support
 - Add 3D visualization of the frustum
 - Export data to CSV for analysis
 - Add unit tests
