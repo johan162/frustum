@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple, List, Dict, Optional
 from dataclasses import dataclass
+from concurrent.futures import ThreadPoolExecutor
 
 
 @dataclass
@@ -291,6 +292,7 @@ class FrustumBucket:
         else:
             fig = plt.figure(figsize=(10, 6))
             ax1 = plt.gca()
+            ax2 = None  # Initialize to avoid Pylance unbound warning
         
         # Main height plot
         ax1.plot(time_points, height_points, 'b-', linewidth=2)
@@ -330,7 +332,7 @@ class FrustumBucket:
                 bbox=props, family='monospace')
 
         # Add derivative plot if requested
-        if show_derivative:
+        if ax2 is not None:
             dhdt = self.calculate_derivative(time_points, height_points)
             ax2.plot(time_points, dhdt, 'r-', linewidth=2)
             ax2.set_xlabel('Time (seconds)', fontsize=12)
@@ -378,6 +380,7 @@ class FrustumBucket:
             fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 10))
         else:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+            ax3 = ax4 = None  # Initialize to avoid Pylance unbound warning
 
         # Ideal plot
         ax1.plot(time_ideal, height_ideal, 'b-', linewidth=2, label='Ideal')
@@ -422,7 +425,7 @@ class FrustumBucket:
                 bbox=props, family='monospace')
 
         # Add derivative plots if requested
-        if show_derivative:
+        if ax3 is not None and ax4 is not None:
             dhdt_ideal = np.gradient(height_ideal, time_ideal)
             dhdt_real = np.gradient(height_real, time_real)
             
@@ -578,17 +581,23 @@ def main():
     print(f"  Time step: {t} seconds\n")
 
     if comparison_mode:
-        # Run ideal simulation
-        print("Running ideal simulation...")
-        bucket_ideal = FrustumBucket(r1, r2, volume, d, discharge_coeff=1.0,
-                                     fluid=FLUIDS["water"])
-        time_ideal, height_ideal = bucket_ideal.simulate(t)
+        # Run simulations in parallel
+        print("Running ideal and realistic simulations in parallel...")
+        bucket_ideal = FrustumBucket(r1, r2, volume, d, 
+                                     discharge_coeff=1.0, fluid=FLUIDS["water"])
+        
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            # Submit both simulations to run in parallel
+            ideal_future = executor.submit(bucket_ideal.simulate, t)
+            real_future = executor.submit(bucket_real.simulate, t)
+            
+            # Wait for both to complete and get results
+            time_ideal, height_ideal = ideal_future.result()
+            time_real, height_real = real_future.result()
+        
         ideal_time = time_ideal[-1]
-
-        # Run realistic simulation
-        print("Running realistic simulation...")
-        time_real, height_real = bucket_real.simulate(t)
         real_time = time_real[-1]
+        print("Simulations complete!")
 
         # Display results
         print("\n" + "=" * 70)
