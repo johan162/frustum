@@ -178,21 +178,15 @@ This is repeated for each time step `Δt` until the bucket is empty.
 ### Simulation Features
 - **Numerical Integration**: Employs Euler's method with configurable time steps
 - **Interactive Input**: Prompts for all necessary parameters with fluid selection
-- **Validation**: Ensures physically meaningful inputs
 - **Comparison Mode**: Side-by-side plots of ideal vs. realistic drainage
 - **Visualization**: Professional matplotlib graphs with parameter annotations
 - **Detailed Output**: Displays calculated parameters, Reynolds numbers, and drainage times
-
-### Code Quality
-- **Professional Code**: Formatted with `black`, linted with `flake8`
-- **Type Hints**: Full type annotations for better code clarity
-- **Comprehensive Documentation**: Detailed docstrings and README
 
 ## 📦 Installation
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.13 or higher
 - Poetry (for dependency management)
 
 ### Install Poetry
