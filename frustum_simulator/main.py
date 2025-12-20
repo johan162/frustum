@@ -261,34 +261,57 @@ class FrustumBucket:
 
         return time_points, height_points
 
-    def plot_simulation(self, time_points: List[float], height_points: List[float]):
+    @staticmethod
+    def calculate_derivative(time_points: List[float], 
+                           height_points: List[float]) -> List[float]:
+        """
+        Calculate the derivative (rate of change) of height with respect to time.
+
+        Args:
+            time_points: List of time values (seconds)
+            height_points: List of corresponding height values (meters)
+
+        Returns:
+            List of dh/dt values (meters/second)
+        """
+        return np.gradient(height_points, time_points)
+
+    def plot_simulation(self, time_points: List[float], height_points: List[float],
+                       show_derivative: bool = False):
         """
         Create a plot of water height vs time.
 
         Args:
             time_points: List of time values (seconds)
             height_points: List of corresponding height values (meters)
+            show_derivative: Whether to show rate of change subplot
         """
-        plt.figure(figsize=(10, 6))
-        plt.plot(time_points, height_points, 'b-', linewidth=2)
-        plt.xlabel('Time (seconds)', fontsize=12)
-        plt.ylabel('Water Height (meters)', fontsize=12)
+        if show_derivative:
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
+        else:
+            fig = plt.figure(figsize=(10, 6))
+            ax1 = plt.gca()
+        
+        # Main height plot
+        ax1.plot(time_points, height_points, 'b-', linewidth=2)
+        ax1.set_xlabel('Time (seconds)', fontsize=12)
+        ax1.set_ylabel('Water Height (meters)', fontsize=12)
 
         # Title includes fluid type if not ideal
         title = 'Water Drainage from Frustum Bucket'
         if self.discharge_coeff < 1.0 or self.fluid.name != "Water":
             title += ' (Realistic)'
-        plt.title(title, fontsize=14, fontweight='bold')
+        ax1.set_title(title, fontsize=14, fontweight='bold')
 
-        plt.grid(True, alpha=0.3)
-        plt.xlim(left=0)
-        plt.ylim(bottom=0)
+        ax1.grid(True, alpha=0.3)
+        ax1.set_xlim(left=0)
+        ax1.set_ylim(bottom=0)
 
         # Add annotations
         total_time = time_points[-1]
-        plt.axhline(y=0, color='r', linestyle='--', alpha=0.5, label='Empty')
-        plt.axhline(y=self.height, color='g', linestyle='--', alpha=0.5, label='Full')
-        plt.legend()
+        ax1.axhline(y=0, color='r', linestyle='--', alpha=0.5, label='Empty')
+        ax1.axhline(y=self.height, color='g', linestyle='--', alpha=0.5, label='Full')
+        ax1.legend()
 
         # Add text box with parameters
         textstr = f'Parameters:\n'
@@ -302,9 +325,31 @@ class FrustumBucket:
         textstr += f'Total time: {total_time:.2f} s'
 
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-        plt.text(0.98, 0.97, textstr, transform=plt.gca().transAxes,
+        ax1.text(0.98, 0.97, textstr, transform=ax1.transAxes,
                 fontsize=10, verticalalignment='top', horizontalalignment='right',
                 bbox=props, family='monospace')
+
+        # Add derivative plot if requested
+        if show_derivative:
+            dhdt = self.calculate_derivative(time_points, height_points)
+            ax2.plot(time_points, dhdt, 'r-', linewidth=2)
+            ax2.set_xlabel('Time (seconds)', fontsize=12)
+            ax2.set_ylabel('Rate of Change (m/s)', fontsize=12)
+            ax2.set_title('Drainage Rate (dh/dt)', fontsize=13, fontweight='bold')
+            ax2.grid(True, alpha=0.3)
+            ax2.set_xlim(left=0)
+            ax2.axhline(y=0, color='k', linestyle='-', alpha=0.3)
+            
+            # Find and annotate max drainage rate
+            max_rate_idx = np.argmax(np.abs(dhdt))
+            max_rate = dhdt[max_rate_idx]
+            max_rate_time = time_points[max_rate_idx]
+            ax2.plot(max_rate_time, max_rate, 'ro', markersize=8)
+            ax2.annotate(f'Max rate: {max_rate:.4f} m/s\nat t={max_rate_time:.1f}s',
+                        xy=(max_rate_time, max_rate),
+                        xytext=(max_rate_time + total_time*0.1, max_rate*0.8),
+                        arrowprops=dict(arrowstyle='->', color='red', lw=1.5),
+                        fontsize=9, color='red')
 
         plt.tight_layout()
         plt.show()
@@ -315,7 +360,8 @@ class FrustumBucket:
         height_ideal: List[float],
         time_real: List[float],
         height_real: List[float],
-        params: dict
+        params: dict,
+        show_derivative: bool = False
     ):
         """
         Create a side-by-side comparison plot of ideal vs realistic drainage.
@@ -326,8 +372,12 @@ class FrustumBucket:
             time_real: Time points for realistic simulation
             height_real: Height points for realistic simulation
             params: Dictionary of simulation parameters
+            show_derivative: Whether to show rate of change subplots
         """
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        if show_derivative:
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 10))
+        else:
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
         # Ideal plot
         ax1.plot(time_ideal, height_ideal, 'b-', linewidth=2, label='Ideal')
@@ -370,6 +420,29 @@ class FrustumBucket:
         ax1.text(0.98, 0.97, textstr, transform=ax1.transAxes,
                 fontsize=10, verticalalignment='top', horizontalalignment='right',
                 bbox=props, family='monospace')
+
+        # Add derivative plots if requested
+        if show_derivative:
+            dhdt_ideal = np.gradient(height_ideal, time_ideal)
+            dhdt_real = np.gradient(height_real, time_real)
+            
+            # Ideal derivative
+            ax3.plot(time_ideal, dhdt_ideal, 'b-', linewidth=2)
+            ax3.set_xlabel('Time (seconds)', fontsize=12)
+            ax3.set_ylabel('Rate of Change (m/s)', fontsize=12)
+            ax3.set_title('Ideal Drainage Rate (dh/dt)', fontsize=13, fontweight='bold')
+            ax3.grid(True, alpha=0.3)
+            ax3.set_xlim(left=0)
+            ax3.axhline(y=0, color='k', linestyle='-', alpha=0.3)
+            
+            # Realistic derivative
+            ax4.plot(time_real, dhdt_real, 'r-', linewidth=2)
+            ax4.set_xlabel('Time (seconds)', fontsize=12)
+            ax4.set_ylabel('Rate of Change (m/s)', fontsize=12)
+            ax4.set_title('Realistic Drainage Rate (dh/dt)', fontsize=13, fontweight='bold')
+            ax4.grid(True, alpha=0.3)
+            ax4.set_xlim(left=0)
+            ax4.axhline(y=0, color='k', linestyle='-', alpha=0.3)
 
         plt.tight_layout()
         plt.show()
@@ -483,6 +556,12 @@ def main():
             break
         t = get_float_input("Time step t (seconds): ", min_value=0.0)
 
+    # Ask about derivative plotting
+    print("\nPlot drainage rate (dh/dt)?")
+    print("  This shows the rate of change of water height over time.")
+    derivative_choice = input("Show derivative plot? (y/n, default n): ").strip().lower()
+    show_derivative = derivative_choice == 'y'
+
     print("\n" + "=" * 70)
     print("Starting simulation...")
     print("=" * 70 + "\n")
@@ -530,7 +609,8 @@ def main():
             'fluid': fluid.name
         }
         FrustumBucket.plot_comparison(time_ideal, height_ideal,
-                                      time_real, height_real, params)
+                                      time_real, height_real, params,
+                                      show_derivative=show_derivative)
     else:
         # Run realistic simulation only
         time_points, height_points = bucket_real.simulate(t)
@@ -544,7 +624,8 @@ def main():
 
         # Plot results
         print("Generating plot...")
-        bucket_real.plot_simulation(time_points, height_points)
+        bucket_real.plot_simulation(time_points, height_points,
+                                   show_derivative=show_derivative)
 
 
 if __name__ == "__main__":
