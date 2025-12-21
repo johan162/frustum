@@ -38,6 +38,10 @@ A frustum is a portion of a cone that lies between two parallel planes cutting i
 - A smaller circular base at the bottom (radius `r2`)
 - A specific volume capacity (`L` in liters)
 
+<img src="frustum-bucket.png" alt="Typical Frustum Bucket" width="200">
+
+***Figure 1: Frustum bucket***
+
 
 ## 🔬 Physics Background
 
