@@ -241,14 +241,14 @@ This will:
 poetry run frustum-sim
 ```
 
-#### Or activate the virtual environment:
+#### Or activate the virtual environment and run directly
 
 ```bash
-poetry shell
+source .venv/bin/activate
 frustum-sim
 ```
 
-#### Or run directly:
+#### Or run as a python module:
 
 ```bash
 poetry run python -m frustum_simulator.main
