@@ -6,11 +6,11 @@ This allows testing without interactive input.
 
 import sys
 import os
+from frustum_simulator.main import FrustumBucket
 
 # Add the parent directory to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from frustum_simulator.main import FrustumBucket
 
 def test_simulation():
     """Run a quick test with predefined parameters."""
@@ -25,7 +25,7 @@ def test_simulation():
     d = 0.01  # 1 cm outlet diameter
     t = 0.05  # 50 ms time step
 
-    print(f"\nTest Parameters:")
+    print("\nTest Parameters:")
     print(f"  Upper radius (r1): {r1} m")
     print(f"  Lower radius (r2): {r2} m")
     print(f"  Volume: {volume} L")
@@ -60,6 +60,7 @@ def test_simulation():
 
     # Plot results
     bucket.plot_simulation(time_points, height_points)
+
 
 if __name__ == "__main__":
     test_simulation()

@@ -1,5 +1,6 @@
 # Frustum Bucket Water Drainage Simulator
 
+[![GitHub release](https://img.shields.io/github/v/release/johan162/frustum?include_prereleases)](https://github.com/johan162/frustum/releases) 
 [![Python Version](https://img.shields.io/badge/python-3.13%2B-blue.svg)](https://www.python.org/downloads/)
 [![Poetry](https://img.shields.io/badge/poetry-dependency%20manager-blue)](https://python-poetry.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -182,6 +183,10 @@ This is repeated for each time step `Δt` until the bucket is empty.
 - **Visualization**: Professional matplotlib graphs with parameter annotations
 - **Detailed Output**: Displays calculated parameters, Reynolds numbers, and drainage times
 
+### Example output plot
+
+<img src="b_r07_r03_d002.png" alt="Output plot r1=0.7, r2=0.3, d=0.002" width="800">
+
 ## 📦 Installation
 
 ### Prerequisites
@@ -193,8 +198,17 @@ This is repeated for each time step `Δt` until the bucket is empty.
 
 If you don't have Poetry installed, install it using:
 
+**Package manager:**
+
 ```bash
-# macOS / Linux / WSL
+# macOS
+brew install python poetry
+```
+
+**Directly:**
+
+```bash
+# Linux / WSL
 curl -sSL https://install.python-poetry.org | python3 -
 
 # Windows PowerShell
@@ -351,38 +365,7 @@ Generating comparison plot...
 ```
 
 The program displays a side-by-side plot showing both ideal and realistic drainage curves, with parameter information below.
-============================================================
-FRUSTUM BUCKET WATER DRAINAGE SIMULATOR
-============================================================
 
-This program simulates water draining from a frustum-shaped
-bucket under ideal conditions using Torricelli's law.
-
-Please enter the following parameters:
-
-Upper radius r1 (meters): 0.15
-Lower radius r2 (meters): 0.10
-Total volume L (liters): 10
-Outlet diameter d (meters): 0.01
-Time step t (seconds): 0.05
-
-============================================================
-Starting simulation...
-============================================================
-
-Calculated bucket height: 0.3395 m
-Outlet area: 0.000079 m²
-
-Simulating with time step: 0.05 seconds
-
-============================================================
-RESULT: 245.67 seconds
-============================================================
-
-The bucket takes 245.67 seconds to empty completely.
-
-Generating plot...
-```
 
 The program will then display a graph showing:
 - Water height (m) on the y-axis
@@ -446,43 +429,7 @@ poetry add package-name
 poetry add --group dev package-name
 ```
 
-## 🧪 Testing the Simulator
-
-### Test Case 1: Small Bucket with Small Outlet
-
-```
-r1 = 0.10 m
-r2 = 0.05 m
-L  = 5 liters
-d  = 0.005 m
-t  = 0.01 s
-
-Expected: Several hundred seconds
-```
-
-### Test Case 2: Large Bucket with Large Outlet
-
-```
-r1 = 0.30 m
-r2 = 0.20 m
-L  = 50 liters
-d  = 0.02 m
-t  = 0.05 s
-
-Expected: A few hundred seconds (faster due to larger outlet)
-```
-
-### Test Case 3: Cylindrical Approximation
-
-```
-r1 = 0.15 m
-r2 = 0.15 m  (same as r1, approaches cylinder)
-L  = 20 liters
-d  = 0.01 m
-t  = 0.05 s
-```
-
-**Note**: The program requires r1 > r2, so this won't work as-is. Use r2 = 0.149 m for near-cylindrical behavior.
+**Note**: The program requires r1 > r2
 
 ## 📝 Physics Assumptions
 
@@ -505,6 +452,8 @@ Contributions are welcome! Areas for improvement:
 - Export data to CSV for analysis
 - Add unit tests
 - Add support for different shapes (cylinder, cone, sphere)
+- Add support for inverted bucket, i.e. allow r1 < r2
+>
 
 ## 📄 License
 
