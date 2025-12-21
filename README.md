@@ -463,7 +463,7 @@ This project is licensed under the MIT License - feel free to use, modify, and d
 
 - Based on **Torricelli's theorem** (Evangelista Torricelli, 1643)
 - Numerical methods from computational fluid dynamics
-- Matplotlib for beautiful visualizations
+- Matplotlib for visualizations
 
 ## 📚 References
 
