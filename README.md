@@ -42,11 +42,14 @@ A frustum is a portion of a cone that lies between two parallel planes cutting i
 
 <img src="frustum-bucket.png" alt="Typical Frustum Bucket" width="200">
 
-***Figure 1: Frustum bucket***
+***Figure 1:*** *Frustum bucket*
 
 </div>
 
 ## 🔬 Physics Background
+
+> For a full derivation of the governing equations see "[Drainage Dynamics of a Conical Frustum Bucket
+Under Ideal Flow Assumptions](bucket_paper.pdf)", *J. Persson*
 
 ### Governing Equations
 
@@ -56,9 +59,9 @@ The simulation is based on the following physical principles:
 
 The volume of a frustum is given by:
 
-```
-V = (π × h / 3) × (r₁² + r₁×r₂ + r₂²)
-```
+$$
+V = \frac{\pi h}{3} \, (r_1^2 + r_1 r_2 + r_2^2)
+$$
 
 where:
 - `V` = volume (m³)
@@ -68,17 +71,17 @@ where:
 
 Given the volume `L`, we can solve for the height:
 
-```
-h = 3V / (π × (r₁² + r₁×r₂ + r₂²))
-```
+$$
+h = \frac{3 V}{ \pi\, (r_1^2 + r_1 r_2 + r_2^2)}
+$$
 
 #### 2. Torricelli's Law
 
 **Torricelli's law** states that the speed of efflux of a fluid through a sharp-edged orifice at the bottom of a tank filled to a depth `h` is the same as the speed that a body would acquire in free fall through a height `h`:
 
-```
-v = √(2gh)
-```
+$$
+v = \sqrt{2gh} 
+$$
 
 where:
 - `v` = velocity of water exiting the outlet (m/s)
@@ -89,9 +92,9 @@ where:
 
 The volumetric flow rate through the outlet is:
 
-```
-Q = A_outlet × v = π(d/2)² × √(2gh)
-```
+$$
+Q = A_{0} \cdot v = \pi(d/2)^2 \,\sqrt{2gh}
+$$
 
 where:
 - `Q` = volumetric flow rate (m³/s)
@@ -102,9 +105,9 @@ where:
 
 The rate at which the water level drops depends on the flow rate and the cross-sectional area at the current water height:
 
-```
-dh/dt = -Q / A(h)
-```
+$$
+\frac{dh}{dt} = -Q / A(h)
+$$
 
 where:
 - `A(h)` = cross-sectional area at height `h` (m²)
@@ -112,15 +115,15 @@ where:
 
 For a frustum, the radius at height `h` is:
 
-```
-r(h) = r₂ + (r₁ - r₂) × (h / H)
-```
+$$
+r(h) = r₂ + (r₁ - r₂) \cdot (h / H)
+$$
 
 And the cross-sectional area is:
 
-```
-A(h) = π × r(h)²
-```
+$$
+A(h) = \pi \, r(h)^2
+$$
 
 #### 5. Realistic Flow Corrections
 
@@ -130,7 +133,7 @@ Real orifices don't achieve ideal flow due to:
 - **Edge effects**: Sharp edges create turbulence and energy losses
 - **Viscous losses**: Fluid friction reduces flow rate
 
-Typical Cd values:
+Typical $C_d$ values:
 ```
 Cd = 1.0   → Ideal flow (theoretical only)
 Cd = 0.8   → Smooth, rounded orifice
@@ -139,16 +142,17 @@ Cd = 0.6   → Sharp edge with significant contraction
 ```
 
 The corrected velocity becomes:
-```
-v = Cd × √(2gh)
-```
+
+$$
+v = C_d \, \sqrt{2gh}
+$$
 
 ##### Viscosity Correction
 Flow behavior depends on the **Reynolds number** (Re):
 
-```
-Re = v × d / ν
-```
+$$
+Re = v \cdot (d / ν)
+$$
 
 where `ν` is kinematic viscosity (m²/s).
 
@@ -168,9 +172,9 @@ Re > 4000:  factor ≈ 1.0   (minimal viscosity effect)
 
 We solve the differential equation using **Euler's method**:
 
-```
-h(t + Δt) = h(t) + (dh/dt) × Δt
-```
+$$
+h(t + Δt) = h(t) + \frac{dh}{dt} \cdot Δt
+$$
 
 This is repeated for each time step `Δt` until the bucket is empty.
 
@@ -190,9 +194,15 @@ This is repeated for each time step `Δt` until the bucket is empty.
 - **Visualization**: Professional matplotlib graphs with parameter annotations
 - **Detailed Output**: Displays calculated parameters, Reynolds numbers, and drainage times
 
-### Example output plot
+### Example output plots
 
 <img src="b_r07_r03_d002.png" alt="Output plot r1=0.7, r2=0.3, d=0.002" width="800">
+
+***Figure 2:*** *Drainage over time and rate of drainage.*
+
+<img src="3D-Bucket.png" width="800">
+
+***Figure 3:*** *3D visualization of the draining bucket.*
 
 ## 📦 Installation
 
@@ -283,15 +293,15 @@ The program includes validation to ensure:
 
 ## 📊 Parameters
 
-| Parameter | Symbol | Unit | Description | Typical Range |
-|-----------|--------|------|-------------|---------------|
-| Upper radius | r1 | meters | Radius at the top opening | 0.1 - 1.0 m |
-| Lower radius | r2 | meters | Radius at the bottom base | 0.05 - 0.5 m |
-| Volume | L | liters | Total bucket capacity | 1 - 100 L |
-| Outlet diameter | d | meters | Diameter of drainage hole | 0.001 - 0.05 m |
-| Discharge coeff | Cd | dimensionless | Flow reduction factor | 0.5 - 1.0 |
-| Fluid type | - | - | Fluid being drained | See list below |
-| Time step | t | seconds | Simulation time increment | 0.01 - 0.1 s |
+| Parameter | Symbol | Unit | Description |
+|-----------|--------|------|-------------|
+| Upper radius | r1 | meters | Radius at the top opening |
+| Lower radius | r2 | meters | Radius at the bottom base |
+| Volume | L | liters | Total bucket capacity |
+| Outlet diameter | d | meters | Diameter of drainage hole |
+| Discharge coeff | Cd | dimensionless | Flow reduction factor |
+| Fluid type | - | - | Fluid being drained |
+| Time step | t | seconds | Simulation time increment |
 
 ### Available Fluids
 

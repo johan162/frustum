@@ -8,6 +8,8 @@ as discharge coefficient and fluid viscosity.
 
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
 from typing import Tuple, List, Dict, Optional
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
@@ -349,7 +351,7 @@ class FrustumBucket:
             ax2.plot(max_rate_time, max_rate, 'ro', markersize=8)
             ax2.annotate(f'Max rate: {max_rate:.4f} m/s\nat t={max_rate_time:.1f}s',
                         xy=(max_rate_time, max_rate),
-                        xytext=(max_rate_time + total_time*0.1, max_rate*0.8),
+                        xytext=(max_rate_time - total_time*0.2, max_rate*0.6),
                         arrowprops=dict(arrowstyle='->', color='red', lw=1.5),
                         fontsize=9, color='red')
 
@@ -448,6 +450,183 @@ class FrustumBucket:
             ax4.axhline(y=0, color='k', linestyle='-', alpha=0.3)
 
         plt.tight_layout()
+        plt.show()
+
+    def animate_3d_drainage(self, time_points: List[float], 
+                           height_points: List[float],
+                           speed_factor: float = 1.0):
+        """
+        Create a 3D animated visualization of the bucket draining.
+        
+        Args:
+            time_points: List of time values (seconds)
+            height_points: List of corresponding height values (meters)
+            speed_factor: Animation speed multiplier (1.0 = real-time)
+        """
+        fig = plt.figure(figsize=(12, 9))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        # Adjust subplot to leave space for title at top
+        fig.subplots_adjust(top=0.92)
+        
+        # Calculate frames - sample the simulation data
+        total_frames = min(len(time_points), 500)  # Limit for performance
+        frame_indices = np.linspace(0, len(time_points)-1, total_frames, dtype=int)
+        
+        def create_frustum_surface(r1, r2, height, water_height):
+            """Generate frustum bucket mesh."""
+            # Vertical resolution
+            z = np.linspace(0, height, 50)
+            theta = np.linspace(0, 2*np.pi, 50)
+            
+            # Create meshgrid
+            Theta, Z = np.meshgrid(theta, z)
+            
+            # Radius at each height
+            R = r2 + (r1 - r2) * (Z / height)
+            
+            # Cartesian coordinates
+            X = R * np.cos(Theta)
+            Y = R * np.sin(Theta)
+            
+            return X, Y, Z
+        
+        def create_water_surface(r1, r2, total_height, water_height):
+            """Generate water surface mesh."""
+            if water_height <= 0:
+                return None, None, None
+            
+            # Water fills from bottom
+            z_water = np.linspace(0, water_height, 30)
+            theta = np.linspace(0, 2*np.pi, 50)
+            
+            Theta, Z = np.meshgrid(theta, z_water)
+            R = self.r2 + (self.r1 - self.r2) * (Z / total_height)
+            
+            X = R * np.cos(Theta)
+            Y = R * np.sin(Theta)
+            
+            return X, Y, Z
+        
+        def create_falling_water(water_height, frame_time):
+            """Generate falling water stream from outlet."""
+            if water_height <= 0:
+                return None, None, None
+            
+            # Stream falls from bottom center
+            stream_length = 0.3  # meters
+            n_particles = 20
+            
+            # Vertical positions
+            z_stream = np.linspace(-stream_length, 0, n_particles)
+            
+            # Slight spread as it falls
+            theta = np.linspace(0, 2*np.pi, 8)
+            spread = 0.005  # small radius
+            
+            x_stream = spread * np.cos(theta[:, np.newaxis])
+            y_stream = spread * np.sin(theta[:, np.newaxis])
+            z_stream = np.tile(z_stream, (len(theta), 1))
+            
+            return x_stream, y_stream, z_stream
+        
+        def init():
+            """Initialize the plot."""
+            ax.clear()
+            ax.set_xlabel('X (meters)', fontsize=10)
+            ax.set_ylabel('Y (meters)', fontsize=10)
+            ax.set_zlabel('Height (meters)', fontsize=10)
+            fig.suptitle('3D Bucket Drainage Visualization', fontsize=13, 
+                        fontweight='bold')
+            
+            # Set consistent axis limits
+            max_r = self.r1 * 1.2
+            ax.set_xlim(-max_r, max_r)
+            ax.set_ylim(-max_r, max_r)
+            ax.set_zlim(-0.3, self.height * 1.1)
+            
+            # Ground plane
+            ground_size = max_r
+            xx, yy = np.meshgrid(np.linspace(-ground_size, ground_size, 10),
+                                np.linspace(-ground_size, ground_size, 10))
+            zz = np.zeros_like(xx) - 0.3
+            ax.plot_surface(xx, yy, zz, alpha=0.2, color='brown')
+            
+            return []
+        
+        def update(frame):
+            """Update animation frame."""
+            ax.clear()
+            
+            idx = frame_indices[frame]
+            current_height = height_points[idx]
+            current_time = time_points[idx]
+            
+            # Set labels and title with current info
+            ax.set_xlabel('X (meters)', fontsize=10)
+            ax.set_ylabel('Y (meters)', fontsize=10)
+            ax.set_zlabel('Height (meters)', fontsize=10)
+            title = f'3D Bucket Drainage - Time: {current_time:.1f}s | '
+            title += f'Water Height: {current_height:.3f}m'
+            fig.suptitle(title, fontsize=12, fontweight='bold')
+            
+            # Set consistent axis limits
+            max_r = self.r1 * 1.2
+            ax.set_xlim(-max_r, max_r)
+            ax.set_ylim(-max_r, max_r)
+            ax.set_zlim(-0.3, self.height * 1.1)
+            
+            # Ground plane
+            ground_size = max_r
+            xx, yy = np.meshgrid(np.linspace(-ground_size, ground_size, 10),
+                                np.linspace(-ground_size, ground_size, 10))
+            zz = np.zeros_like(xx) - 0.3
+            ax.plot_surface(xx, yy, zz, alpha=0.2, color='brown')
+            
+            # Draw frustum bucket (semi-transparent)
+            X_bucket, Y_bucket, Z_bucket = create_frustum_surface(
+                self.r1, self.r2, self.height, current_height
+            )
+            ax.plot_surface(X_bucket, Y_bucket, Z_bucket, alpha=0.15, 
+                          color='gray', edgecolor='black', linewidth=0.3)
+            
+            # Draw water inside bucket
+            if current_height > 0.001:
+                X_water, Y_water, Z_water = create_water_surface(
+                    self.r1, self.r2, self.height, current_height
+                )
+                if X_water is not None:
+                    ax.plot_surface(X_water, Y_water, Z_water, alpha=0.7, 
+                                  color='cyan', edgecolor='blue', linewidth=0.1)
+                
+                # Draw falling water stream
+                x_stream, y_stream, z_stream = create_falling_water(
+                    current_height, current_time
+                )
+                if x_stream is not None:
+                    ax.plot_surface(x_stream, y_stream, z_stream, 
+                                  alpha=0.6, color='lightblue')
+            
+            # Set viewing angle
+            ax.view_init(elev=20, azim=45 + frame * 0.5)  # Slow rotation
+            
+            return []
+        
+        # Calculate animation interval based on speed factor
+        # Target ~30 fps for smooth animation
+        total_duration_ms = (time_points[-1] * 1000) / speed_factor
+        interval = max(total_duration_ms / total_frames, 33)  # min 33ms (30fps)
+        
+        print(f"\nGenerating 3D animation...")
+        print(f"  Total frames: {total_frames}")
+        print(f"  Animation speed: {speed_factor}x real-time")
+        print(f"  Duration: {total_duration_ms/1000:.1f} seconds")
+        print("  (Close the window to continue)\n")
+        
+        anim = FuncAnimation(fig, update, frames=total_frames,
+                           init_func=init, interval=interval, 
+                           blit=False, repeat=True)
+        
         plt.show()
 
 
@@ -565,6 +744,26 @@ def main():
     derivative_choice = input("Show derivative plot? (y/n, default n): ").strip().lower()
     show_derivative = derivative_choice == 'y'
 
+    # Ask about 3D animation
+    print("\nShow 3D animated visualization?")
+    print("  This shows a real-time 3D view of the bucket draining.")
+    print("  Warning: Animation may take time to generate.")
+    animation_choice = input("Show 3D animation? (y/n, default n): ").strip().lower()
+    show_3d_animation = animation_choice == 'y'
+    
+    animation_speed = 1.0
+    if show_3d_animation:
+        print("\nAnimation speed:")
+        print("  1.0 = Real-time, 2.0 = 2x faster, 0.5 = Half speed")
+        speed_input = input("Enter speed factor (default 1.0): ").strip()
+        if speed_input:
+            try:
+                animation_speed = float(speed_input)
+                animation_speed = max(0.1, min(animation_speed, 10.0))
+            except ValueError:
+                print("Invalid input, using default 1.0")
+                animation_speed = 1.0
+
     print("\n" + "=" * 70)
     print("Starting simulation...")
     print("=" * 70 + "\n")
@@ -620,6 +819,12 @@ def main():
         FrustumBucket.plot_comparison(time_ideal, height_ideal,
                                       time_real, height_real, params,
                                       show_derivative=show_derivative)
+        
+        # Show 3D animation if requested (use realistic simulation)
+        if show_3d_animation:
+            print("\nGenerating 3D visualization for realistic simulation...")
+            bucket_real.animate_3d_drainage(time_real, height_real, 
+                                           speed_factor=animation_speed)
     else:
         # Run realistic simulation only
         time_points, height_points = bucket_real.simulate(t)
@@ -635,6 +840,12 @@ def main():
         print("Generating plot...")
         bucket_real.plot_simulation(time_points, height_points,
                                    show_derivative=show_derivative)
+        
+        # Show 3D animation if requested
+        if show_3d_animation:
+            print("\nGenerating 3D visualization...")
+            bucket_real.animate_3d_drainage(time_points, height_points,
+                                           speed_factor=animation_speed)
 
 
 if __name__ == "__main__":
