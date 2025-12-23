@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "frustum-bucket-simulator"
-version = "0.1.0"
+version = "1.1.0"
 description = "Physics simulation of water draining from a frustum bucket"
 authors = ["User"]
 readme = "README.md"

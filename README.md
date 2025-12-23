@@ -9,11 +9,36 @@
 
 A physics-based simulation of fluid draining from a frustum-shaped bucket with **realistic effects** including discharge coefficient and viscosity, using **Torricelli's law** and numerical integration methods.
 
-### 🆕 Features
-- **Discharge Coefficient (Cd)**: Accounts for real-world flow reduction (vena contracta, edge effects)
-- **Fluid Viscosity**: Supports multiple fluid types (water, petrol, oil, treacle, honey, milk)
-- **Reynolds Number Correction**: Adjusts flow based on laminar/turbulent conditions
+## ✨ Features
+
+### Physics & Realism
+- **Accurate Physics Simulation**: Uses Torricelli's law and proper fluid dynamics
+- **Discharge Coefficient**: Adjustable Cd parameter (0.5-1.0) for realistic flow
+- **Multiple Fluids**: Choose from water, petrol, milk, motor oil, olive oil, treacle, or honey
+- **Viscosity Effects**: Automatic Reynolds number calculation and flow corrections
+- **Reynolds Number Correctio, Laminar/Turbulent Flow**: Adapts to flow regime based on conditions
+
+### Simulation Features
+- **Numerical Integration**: Employs Euler's method with configurable time steps
+- **Interactive Input**: Prompts for all necessary parameters with fluid selection
+- **Comparison Mode**: Side-by-side plots of ideal vs. realistic drainage
+- **Visualization**: Professional matplotlib graphs with parameter annotations
+- **Detailed Output**: Displays calculated parameters, Reynolds numbers, and drainage times
 - **Side-by-Side Comparison**: Visual comparison of ideal vs. realistic drainage
+
+### Simulation assumption/limitations
+
+This simulation makes the following ideal assumptions:
+
+1. **No air resistance**: Air drag is negligible
+2. **Sharp-edged orifice**: The outlet is a perfect circular hole
+3. **Steady flow**: No turbulence or vortex formation
+4. **Rigid container**: The bucket doesn't deform
+5. **Constant gravity**: g = 9.81 m/s²
+
+In reality:
+- Surface tension and vortex effects may play a role
+
 
 ## 📋 Table of Contents
 
@@ -178,21 +203,7 @@ $$
 
 This is repeated for each time step `Δt` until the bucket is empty.
 
-## ✨ Features
 
-### Physics & Realism
-- **Accurate Physics Simulation**: Uses Torricelli's law and proper fluid dynamics
-- **Discharge Coefficient**: Adjustable Cd parameter (0.5-1.0) for realistic flow
-- **Multiple Fluids**: Choose from water, petrol, milk, motor oil, olive oil, treacle, or honey
-- **Viscosity Effects**: Automatic Reynolds number calculation and flow corrections
-- **Laminar/Turbulent Flow**: Adapts to flow regime based on conditions
-
-### Simulation Features
-- **Numerical Integration**: Employs Euler's method with configurable time steps
-- **Interactive Input**: Prompts for all necessary parameters with fluid selection
-- **Comparison Mode**: Side-by-side plots of ideal vs. realistic drainage
-- **Visualization**: Professional matplotlib graphs with parameter annotations
-- **Detailed Output**: Displays calculated parameters, Reynolds numbers, and drainage times
 
 ### Example output plots
 
@@ -436,30 +447,9 @@ frustum-bucket-simulator/
 └── poetry.lock          # Locked dependency versions (after install)
 ```
 
-### Adding Dependencies
-
-```bash
-# Add a new runtime dependency
-poetry add package-name
-
-# Add a development dependency
-poetry add --group dev package-name
-```
 
 **Note**: The program requires r1 > r2
 
-## 📝 Physics Assumptions
-
-This simulation makes the following ideal assumptions:
-
-1. **No air resistance**: Air drag is negligible
-2. **Sharp-edged orifice**: The outlet is a perfect circular hole
-3. **Steady flow**: No turbulence or vortex formation
-4. **Rigid container**: The bucket doesn't deform
-5. **Constant gravity**: g = 9.81 m/s²
-
-In reality:
-- Surface tension and vortex effects may play a role
 
 ## 🤝 Contributing
 

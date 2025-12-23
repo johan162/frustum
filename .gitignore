@@ -44,3 +44,6 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+
+# make
+.make/
